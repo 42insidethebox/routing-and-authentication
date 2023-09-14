@@ -4,8 +4,7 @@ import { catchError, tap } from "rxjs/operators";
 import { BehaviorSubject, Subject, throwError } from "rxjs";
 import { User } from "./user.model";
 import { Router } from "@angular/router";
-import { StringMap } from "@angular/compiler/src/compiler_facade_interface";
-import { environment } from "src/environments/environment";
+import { environment } from "src/environments/environments";
 export interface AuthResponseData {
   kind: string;
   idToken: string;
