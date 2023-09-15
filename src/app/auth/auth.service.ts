@@ -1,11 +1,10 @@
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { catchError, tap } from "rxjs/operators";
-import { BehaviorSubject, Subject, throwError } from "rxjs";
+import { BehaviorSubject, throwError } from "rxjs";
 import { User } from "./user.model";
 import { Router } from "@angular/router";
-import { StringMap } from "@angular/compiler/src/compiler_facade_interface";
-import { environment } from "src/environments/environment";
+import { environment } from "../../environments/environment";
 export interface AuthResponseData {
   kind: string;
   idToken: string;
@@ -17,6 +16,7 @@ export interface AuthResponseData {
 @Injectable({ providedIn: "root" })
 export class AuthService {
   user = new BehaviorSubject<User>(null);
+  isErrorState = new BehaviorSubject<boolean>(false);
   private tokenExpirationTimer: any;
 
   constructor(private http: HttpClient, private router: Router) {}
@@ -94,6 +94,7 @@ export class AuthService {
 
   logout() {
     this.user.next(null);
+    this.isErrorState.next(false); // Reset the error state here
     this.router.navigate(["/auth"]);
     localStorage.removeItem("userData");
     if (this.tokenExpirationTimer) {
@@ -117,6 +118,7 @@ export class AuthService {
     const expirationDate = new Date(new Date().getTime() + expiresIn * 1000);
     const user = new User(email, userId, token, expirationDate);
     this.user.next(user);
+    this.isErrorState.next(false); // Reset the error state here
     this.autoLogout(expiresIn * 1000);
     localStorage.setItem("userData", JSON.stringify(user));
   }
@@ -130,18 +132,15 @@ export class AuthService {
     switch (errorRes.error.error.message) {
       case "EMAIL_EXISTS":
         errorMessage = "This email exists already";
-        console.log("Error Response:", errorRes);
         break;
       case "EMAIL_NOT_FOUND":
         errorMessage = "This email was not found.";
-        console.log("Error Response:", errorRes);
         break;
       case "INVALID_PASSWORD":
         errorMessage = "Incorrect password.";
-        console.log("Error Response:", errorRes);
         break;
     }
-    // this.isLoading = false;
+
     return throwError(errorMessage);
   }
 }
